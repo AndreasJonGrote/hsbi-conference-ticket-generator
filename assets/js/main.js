@@ -8,42 +8,42 @@ const AUTO_FILL_ENABLED = true; // Set to false to disable auto-fill
 // ======= Required fields config =======
 const STEP1_FIELDS = [
   {
-    id: 'nameInput',
+    selector: '.js-name',
     name: 'Name',
     validator: isValidName
   },
   {
-    id: 'emailInput', 
-    name: 'E-Mail',
+    selector: '.js-email', 
+    name: 'Email',
     validator: isValidEmail
   }
 ];
 
 const STEP3_FIELDS = [
   {
-    id: 'confirmCheckbox',
-    name: 'Datenschutzbestimmung',
+    selector: '.js-confirm',
+    name: 'Privacy consent',
     validator: (value) => value && value.checked
   }
 ];
 
 // ======= Element refs =======
-const board = document.getElementById("board");
-const canvas = document.getElementById("canvas");
-const res = document.getElementById("res");
-const pen = document.getElementById("pen");
-const bg = document.getElementById("bg");
-const clearBtn = document.getElementById("clear");
-const finalizeBtn = document.getElementById("finalize");
-const previewCanvas = document.getElementById("previewCanvasInline");
+const board = document.querySelector(".board");
+const res = document.querySelector(".js-res");
+const pen = document.querySelector(".js-pen");
+const bg = document.querySelector(".js-bg");
+const clearBtn = document.querySelector(".js-clear");
+const finalizeBtn = document.querySelector(".js-finalize");
+const previewCanvas = document.querySelector(".js-preview-canvas");
 
 
 // ======= Status updates =======
 function updateStatus(message) {
-  const statusEl = document.getElementById("status");
-  if (statusEl) {
-    statusEl.textContent = message;
-  }
+  const statusEl = document.querySelector(".status");
+  if (!statusEl) return;
+  statusEl.textContent = message || '';
+  const isErr = message && /please|error|invalid|missing/i.test(message);
+  statusEl.classList.toggle('is-error', Boolean(isErr));
 }
 
 // ======= Auto-fill functionality =======
@@ -105,17 +105,17 @@ function validateFields(fields) {
   const errors = [];
 
   fields.forEach(field => {
-    const element = document.getElementById(field.id);
+    const element = field.selector ? document.querySelector(field.selector) : (field.id ? document.getElementById(field.id) : null);
     if (!element) return;
 
-    const value = field.id === 'confirmCheckbox' ? element : element.value;
+    const value = (field.selector === '.js-confirm' || field.id === 'confirmCheckbox') ? element : element.value;
     const isValid = field.validator(value);
 
     if (!isValid) {
       element.setAttribute("aria-invalid", "true");
       
       // Special handling for confirmCheckbox - also mark the control-confirm container
-      if (field.id === 'confirmCheckbox') {
+      if (field.selector === '.js-confirm' || field.id === 'confirmCheckbox') {
         const controlConfirm = document.querySelector('.control-confirm');
         if (controlConfirm) {
           controlConfirm.setAttribute("aria-invalid", "true");
@@ -128,7 +128,7 @@ function validateFields(fields) {
       element.removeAttribute("aria-invalid");
       
       // Special handling for confirmCheckbox - also remove from control-confirm container
-      if (field.id === 'confirmCheckbox') {
+      if (field.selector === '.js-confirm' || field.id === 'confirmCheckbox') {
         const controlConfirm = document.querySelector('.control-confirm');
         if (controlConfirm) {
           controlConfirm.removeAttribute("aria-invalid");
@@ -138,7 +138,7 @@ function validateFields(fields) {
   });
 
   if (hasErrors) {
-    const errorMessage = `Bitte füllen Sie folgende Felder korrekt aus: ${errors.join(', ')}`;
+    const errorMessage = `Please fill in the following fields correctly: ${errors.join(', ')}`;
     updateStatus(errorMessage);
   }
 
@@ -152,21 +152,21 @@ function validateStep1() {
 function validateStep3() {
   return validateFields(STEP3_FIELDS);
 }
-const backToDrawBtn = document.getElementById("backToDraw");
-const downloadBtn = document.getElementById("proceed");
-const backToPreviewBtn = document.getElementById("backToPreview");
-const submitTicketBtn = document.getElementById("submitTicket");
-const step1Chip = document.getElementById("step1");
-const step2Chip = document.getElementById("step2");
-const step3Chip = document.getElementById("step3");
-const step4Chip = document.getElementById("step4");
-const undoBtn = document.getElementById("undo");
-const redoBtn = document.getElementById("redo");
-const nameInput = document.getElementById("nameInput");
-const orgInput = document.getElementById("orgInput");
-const emailInput = document.getElementById("emailInput");
-const resLabel = document.getElementById("resLabel");
-const randomizeBtn = document.getElementById("randomize");
+const backToDrawBtn = document.querySelector(".js-backToDraw");
+const downloadBtn = document.querySelector(".js-proceed");
+const backToPreviewBtn = document.querySelector(".js-backToPreview");
+const submitTicketBtn = document.querySelector(".js-submitTicket");
+const step1Chip = document.querySelector(".js-step1");
+const step2Chip = document.querySelector(".js-step2");
+const step3Chip = document.querySelector(".js-step3");
+const step4Chip = document.querySelector(".js-step4");
+const undoBtn = document.querySelector(".js-undo");
+const redoBtn = document.querySelector(".js-redo");
+const nameInput = document.querySelector(".js-name");
+const orgInput = document.querySelector(".js-org");
+const emailInput = document.querySelector(".js-email");
+const resLabel = document.querySelector(".js-res-label");
+const randomizeBtn = document.querySelector(".js-randomize");
 
 // Step toggles (preview at identical position/size)
 function showStep2() {
@@ -183,9 +183,9 @@ function showStep2() {
   document.body.classList.remove("step1-active");
   
   // Copy values to hidden fields
-  const hiddenName = document.getElementById("hiddenName");
-  const hiddenEmail = document.getElementById("hiddenEmail");
-  const hiddenOrg = document.getElementById("hiddenOrg");
+  const hiddenName = document.querySelector(".js-hidden-name");
+  const hiddenEmail = document.querySelector(".js-hidden-email");
+  const hiddenOrg = document.querySelector(".js-hidden-org");
   
   if (hiddenName && nameInput) hiddenName.value = nameInput.value;
   if (hiddenEmail && emailInput) hiddenEmail.value = emailInput.value;
@@ -229,7 +229,6 @@ function showStep3() {
   
   const confirmControl = document.querySelector(".control-confirm");
   if (confirmControl) confirmControl.style.display = "flex";
-  updateStatus("Bitte bestätigen Sie die Datenschutzbestimmungen.");
 }
 function showStep4() {
   // Hide canvas area and controls
@@ -622,26 +621,7 @@ function randomHexColor() {
     b = randInt(0, 255);
   return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
-function hexToRgb(hex) {
-  if (!hex) return null;
-  const m = hex.replace("#", "");
-  const bigint = parseInt(
-    m.length === 3
-      ? m
-          .split("")
-          .map((c) => c + c)
-          .join("")
-      : m,
-    16
-  );
-  return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
-}
-function colorDist2(a, b) {
-  const dr = a.r - b.r,
-    dg = a.g - b.g,
-    db = a.b - b.b;
-  return dr * dr + dg * dg + db * db;
-}
+// (removed duplicate hexToRgb/colorDist2)
 function ensureContrast(bgHex) {
   const minDist = 80;
   const bgRGB = hexToRgb(bgHex);

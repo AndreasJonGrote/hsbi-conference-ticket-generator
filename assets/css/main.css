@@ -59,7 +59,7 @@ body {
 }
 .app {
   width: 100%;
-  max-width: 660px;
+  max-width: 630px;
 }
 .panel {
   position: relative;
@@ -81,9 +81,8 @@ body {
   color: #fff;
   padding: var(--name-pad-y) calc(var(--name-pad-x) + var(--corner-size))
     var(--name-pad-y) calc(var(--name-pad-x) + var(--corner-size));
-  font-size: 30px;
+  font-size: 25px;
   font-family: "ReplicaMono", system-ui, sans-serif;
-  font-weight: 800;
   letter-spacing: calc(var(--ui-tracking) - 0.005em);
   line-height: 1.05;
 }
@@ -103,6 +102,17 @@ body {
   color: #4b5563;
   font-size: 14px;
   line-height: 1.5;
+}
+.status {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: #000;
+}
+.status.is-error {
+  color: rgba(255, 116, 255, 1);
+}
+.is-hidden {
+  display: none !important;
 }
 .muted {
   color: var(--ui-muted);
@@ -285,10 +295,12 @@ input[aria-invalid="true"] {
   border: 1px solid var(--ui-ring);
   font-size: 0.82rem;
   color: #000;
+  opacity: 0.5;
 }
 .chip.active {
   color: #000;
   border-color: #6366f1;
+  opacity: 1;
 }
 
 .board-wrap {
@@ -305,7 +317,7 @@ input[aria-invalid="true"] {
   margin: 0 auto;
 }
 .canvas-area .board,
-.canvas-area #previewCanvasInline {
+.canvas-area .preview-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -404,7 +416,7 @@ body:not(.step1-active) .control input[type="email"] {
   display: none;
 }
 
-#previewCanvasInline {
+.preview-canvas {
   display: none;
   border: 1px solid var(--ui-ring);
   border-radius: 4px;
@@ -418,8 +430,7 @@ body:not(.step1-active) .control input[type="email"] {
   color: #fff;
   border: 1px solid #000;
   font-family: "ReplicaMono", system-ui, sans-serif;
-  font-size: calc(var(--name-size) * var(--button-scale));
-  font-weight: 800;
+  font-size: 22px;
   padding: calc(var(--name-pad-y) * var(--button-scale))
     calc(var(--name-pad-x) + var(--corner-size))
     calc(var(--name-pad-y) * var(--button-scale))

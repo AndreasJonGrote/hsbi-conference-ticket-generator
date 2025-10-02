@@ -91,6 +91,7 @@ $totalTickets = count($tickets);
             border: 1px solid #ddd;
             border-radius: 4px;
         }
+        .muted { color:#666; }
         .no-tickets {
             text-align: center;
             color: #666;
@@ -135,21 +136,21 @@ $totalTickets = count($tickets);
                         <div class="images-container">
                             <div class="image-section">
                                 <h4>Ticket</h4>
-                                <?php if (file_exists(__DIR__ . '/' . $ticket['ticket_file'])): ?>
+                                <?php if (isset($ticket['ticket_file']) && is_string($ticket['ticket_file']) && file_exists(__DIR__ . '/' . $ticket['ticket_file'])): ?>
                                     <img src="<?php echo htmlspecialchars($ticket['ticket_file']); ?>" 
                                          alt="Ticket für <?php echo htmlspecialchars($ticket['name']); ?>">
                                 <?php else: ?>
-                                    <p style="color: #999; font-style: italic;">Bild nicht gefunden</p>
+                                    <p class="muted" style="font-style: italic;">Bild nicht gefunden</p>
                                 <?php endif; ?>
                             </div>
                             
                             <div class="image-section">
                                 <h4>Canvas</h4>
-                                <?php if (file_exists(__DIR__ . '/' . $ticket['pattern_file'])): ?>
+                                <?php if (isset($ticket['pattern_file']) && is_string($ticket['pattern_file']) && file_exists(__DIR__ . '/' . $ticket['pattern_file'])): ?>
                                     <img src="<?php echo htmlspecialchars($ticket['pattern_file']); ?>" 
                                          alt="Canvas für <?php echo htmlspecialchars($ticket['name']); ?>">
                                 <?php else: ?>
-                                    <p style="color: #999; font-style: italic;">Bild nicht gefunden</p>
+                                    <p class="muted" style="font-style: italic;">Bild nicht gefunden</p>
                                 <?php endif; ?>
                             </div>
                         </div>
