@@ -22,26 +22,49 @@ $table_name = $wpdb->prefix . 'hsbi_tickets';
 
 // Filter-Parameter
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
-$optin_filter = ($filter === 'optin') ? "WHERE optin = 1" : "";
+$optin_filter = "";
+if ($filter === 'optin') {
+    $optin_filter = "WHERE optin = 1";
+} elseif ($filter === 'nooptin') {
+    $optin_filter = "WHERE optin = 0";
+} elseif ($filter === 'invalid') {
+    $optin_filter = "WHERE optin = 0"; // Fehlerhafte Tickets werden separat geladen
+}
 
 // Tickets aus Datenbank laden
-$tickets = $wpdb->get_results(
-	"SELECT * FROM {$table_name} {$optin_filter} ORDER BY created_at DESC",
-	ARRAY_A
-);
-
-// Nur Tickets mit gültigen Bildern anzeigen
-$validTickets = array();
-foreach ($tickets as $ticket) {
-	$pattern_image_path = __DIR__ . '/' . $ticket['pattern_file'];
-	$ticket_image_path = __DIR__ . '/' . $ticket['ticket_file'];
+if ($filter === 'invalid') {
+	// Alle Tickets laden und fehlerhafte identifizieren
+	$all_tickets = $wpdb->get_results("SELECT * FROM {$table_name} ORDER BY created_at DESC", ARRAY_A);
+	$invalid_tickets = array();
 	
-	// Prüfen ob beide Bilder existieren
-	if (file_exists($pattern_image_path) && file_exists($ticket_image_path)) {
-		$validTickets[] = $ticket;
+	foreach ($all_tickets as $ticket) {
+		$pattern_image_path = __DIR__ . '/' . $ticket['pattern_file'];
+		$ticket_image_path = __DIR__ . '/' . $ticket['ticket_file'];
+		
+		if (!file_exists($pattern_image_path) || !file_exists($ticket_image_path)) {
+			$invalid_tickets[] = $ticket;
+		}
 	}
+	$tickets = $invalid_tickets;
+} else {
+	$tickets = $wpdb->get_results(
+		"SELECT * FROM {$table_name} {$optin_filter} ORDER BY created_at DESC",
+		ARRAY_A
+	);
+	
+	// Nur Tickets mit gültigen Bildern anzeigen (außer bei fehlerhaften)
+	$validTickets = array();
+	foreach ($tickets as $ticket) {
+		$pattern_image_path = __DIR__ . '/' . $ticket['pattern_file'];
+		$ticket_image_path = __DIR__ . '/' . $ticket['ticket_file'];
+		
+		// Prüfen ob beide Bilder existieren
+		if (file_exists($pattern_image_path) && file_exists($ticket_image_path)) {
+			$validTickets[] = $ticket;
+		}
+	}
+	$tickets = $validTickets;
 }
-$tickets = $validTickets;
 
 $totalTickets = count($tickets);
 
@@ -116,11 +139,30 @@ function anonymize_data($name, $email, $optin) {
 	return array('name' => $anonymized_name, 'email' => $anonymized_email);
 }
 
-// Opt-in-Tickets mit gültigen Bildern zählen
+// Alle Tickets aus DB laden für korrekte Zählung
+$all_tickets_from_db = $wpdb->get_results("SELECT * FROM {$table_name} ORDER BY created_at DESC", ARRAY_A);
+
+// Gültige und fehlerhafte Tickets zählen
+$validTickets = 0;
+$invalidTickets = 0;
 $optinTickets = 0;
-foreach ($tickets as $ticket) {
-	if ($ticket['optin'] == 1) {
-		$optinTickets++;
+$noOptinTickets = 0;
+
+foreach ($all_tickets_from_db as $ticket) {
+	$pattern_image_path = __DIR__ . '/' . $ticket['pattern_file'];
+	$ticket_image_path = __DIR__ . '/' . $ticket['ticket_file'];
+	
+	if (file_exists($pattern_image_path) && file_exists($ticket_image_path)) {
+		// Gültiges Ticket
+		$validTickets++;
+		if ($ticket['optin'] == 1) {
+			$optinTickets++;
+		} else {
+			$noOptinTickets++;
+		}
+	} else {
+		// Fehlerhaftes Ticket
+		$invalidTickets++;
 	}
 }
 ?>
@@ -172,21 +214,37 @@ foreach ($tickets as $ticket) {
 </style>
 
 <div class="wrap">
-    <h1>Ticket Übersicht (<?php echo $totalTickets; ?> Tickets<?php echo $filter === 'optin' ? ' - nur Opt-in' : ''; ?>)</h1>
+    <h1>Ticket Übersicht (<?php 
+        if ($filter === 'all') {
+            echo $validTickets . ' Tickets';
+        } elseif ($filter === 'optin') {
+            echo $optinTickets . ' Tickets - nur Opt-in';
+        } elseif ($filter === 'nooptin') {
+            echo $noOptinTickets . ' Tickets - nur ohne Opt-in';
+        } elseif ($filter === 'invalid') {
+            echo $invalidTickets . ' Tickets - fehlerhafte';
+        }
+    ?>)</h1>
     
             <!-- WordPress Navigation -->
             <div class="tablenav top">
                 <div class="alignleft">
                     <a href="?page=hsbi-tickets&filter=all" class="button <?php echo $filter === 'all' ? 'button-primary' : ''; ?>">
-                        Alle Tickets (<?php echo $wpdb->get_var("SELECT COUNT(*) FROM {$table_name}"); ?>)
+                        Alle Tickets (<?php echo $validTickets; ?>)
                     </a>
                     <a href="?page=hsbi-tickets&filter=optin" class="button <?php echo $filter === 'optin' ? 'button-primary' : ''; ?>">
                         Nur Opt-in (<?php echo $optinTickets; ?>)
                     </a>
+                    <a href="?page=hsbi-tickets&filter=nooptin" class="button <?php echo $filter === 'nooptin' ? 'button-primary' : ''; ?>">
+                        Nur ohne Opt-in (<?php echo $noOptinTickets; ?>)
+                    </a>
+                    <a href="?page=hsbi-tickets&filter=invalid" class="button <?php echo $filter === 'invalid' ? 'button-primary' : ''; ?>">
+                        Fehlerhafte (<?php echo $invalidTickets; ?>)
+                    </a>
                 </div>
             </div>
     
-    <?php if ($filter === 'all' || $filter === 'optin'): ?>
+    <?php if ($filter === 'all' || $filter === 'optin' || $filter === 'nooptin' || $filter === 'invalid'): ?>
         
         <!-- Tickets Tabelle -->
         <?php if (empty($tickets)): ?>
