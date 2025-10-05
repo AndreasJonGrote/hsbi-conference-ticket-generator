@@ -1,0 +1,15 @@
+Hello {name},
+
+Thank you for your interest in the Postphotographic Images Conference at HSBI!
+
+Your personal registration link has been created successfully.  
+To complete your registration and confirm your participation, please click the link below:
+
+{optin_link}
+
+Once you’ve confirmed your email address, your registration will be finalized and your personal conference ticket will be sent to you by email.
+
+We look forward to welcoming you to the conference!
+
+Best regards,  
+Your HSBI Team

@@ -38,18 +38,6 @@ select,
 textarea {
   font-family: inherit;
 }
-body {
-  margin: 0;
-  font-family: "ReplicaMono", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
-    Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji",
-    "Segoe UI Emoji";
-  color: #000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
-  letter-spacing: var(--ui-tracking);
-}
 .strong {
 	font-weight: 600;
 	background: #000;
@@ -60,6 +48,16 @@ body {
 .app {
   width: 100%;
   max-width: 660px;
+  margin: 0;
+  font-family: "ReplicaMono", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
+    Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  letter-spacing: var(--ui-tracking);
 }
 .panel {
   position: relative;
@@ -155,6 +153,10 @@ body {
 }
 .control-name {
   order: 4;
+}
+.control-salutation {
+  order: 7;
+  display: none;
 }
 .control-org {
   order: 5;

@@ -32,6 +32,8 @@ Dabei arbeitest du immer im bestehenden Projektkontext und hältst dich **strikt
   Nutze direkte Lösungen, vermeide unnötige Variablen, unnötige Zwischenspeicherungen oder Umwege.  
   **PFLICHT**: Jede Zeile Code muss einen klaren Zweck haben.
   **PFLICHT**: Nutze für **JavaScript Dynamisierungen **
+  **PFLICHT**: Kein Code schreiben, wenn er nicht explizit verlangt wurde (z.B. in bestehenden Dateien, eigenständige Erweiterungen, etc.).
+  **VERBOTEN**: Die Verwendung von Emojis (z.B. in Readme.md, Kommentaren, etc.).
 
 - **Keine Neuerfindungen**  
   Arbeite ausschließlich in bestehenden Dateien.  
@@ -66,7 +68,8 @@ Dabei arbeitest du immer im bestehenden Projektkontext und hältst dich **strikt
   - **PFLICHT**: CSS- oder Tailwind-Klassen haben **immer Vorrang** vor Inline-Styles.  
 
 - **String-Verkettung in PHP**  
-  - **PFLICHT**: Verwende **formatierte, mehrzeilige Strings mit Tabs**, anstatt eine Variable in jeder Zeile neu zu verketten.  
+  - **PFLICHT**: Verwende **formatierte, mehrzeilige Strings mit Tabs**, anstatt eine Variable in jeder Zeile neu zu verketten. 
+  - **PFLICHT**: Bei IF ELSE Strukturen ist immer die Variante `<?php if () { ... } else { ... } ?>` zu verwenden.
   - **VERBOTEN**: Unnötige Einzelzeilen-Konkatenationen.  
   - **ZIEL**: Kompakter, aber sauber formatierter Code.  
 

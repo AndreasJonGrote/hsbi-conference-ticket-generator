@@ -1,6 +1,6 @@
 // ======= Overlay sources (local only) =======
 const OVERLAY_LOCAL_FILENAME =
-  "assets/images/Post-Photografc-Images_Overlay.png";
+  (typeof hsbiTicket !== 'undefined' ? hsbiTicket.pluginUrl : '') + "views/assets/images/Post-Photografc-Images_Overlay.png";
 
 // ======= Auto-fill configuration =======
 const AUTO_FILL_ENABLED = true; // Set to false to disable auto-fill
@@ -53,7 +53,8 @@ function saveFormData() {
   const formData = {
     name: nameInput ? nameInput.value : '',
     email: emailInput ? emailInput.value : '',
-    organization: orgInput ? orgInput.value : ''
+    organization: orgInput ? orgInput.value : '',
+    salutation: salutationInput ? salutationInput.value : ''
   };
   
   sessionStorage.setItem('ticketFormData', JSON.stringify(formData));
@@ -64,7 +65,7 @@ async function loadFormData() {
   
   try {
     // Try to load from server session first
-    const response = await fetch('assets/library/ajax.php?action=getSessionData');
+    const response = await fetch((typeof hsbiTicket !== 'undefined' ? hsbiTicket.ajaxUrl : 'views/assets/library/ajax.php') + '?action=getSessionData');
     const result = await response.json();
     
     if (result.success && result.data) {
@@ -72,6 +73,7 @@ async function loadFormData() {
       if (nameInput && result.data.name) nameInput.value = result.data.name;
       if (emailInput && result.data.email) emailInput.value = result.data.email;
       if (orgInput && result.data.organization) orgInput.value = result.data.organization;
+      if (salutationInput && result.data.salutation) salutationInput.value = result.data.salutation;
       
       console.log('Form data loaded from server session:', result.data);
     } else {
@@ -83,6 +85,7 @@ async function loadFormData() {
         if (nameInput && formData.name) nameInput.value = formData.name;
         if (emailInput && formData.email) emailInput.value = formData.email;
         if (orgInput && formData.organization) orgInput.value = formData.organization;
+        if (salutationInput && formData.salutation) salutationInput.value = formData.salutation;
         
         console.log('Form data loaded from local session:', formData);
       }
@@ -165,6 +168,7 @@ const redoBtn = document.getElementById("redo");
 const nameInput = document.getElementById("nameInput");
 const orgInput = document.getElementById("orgInput");
 const emailInput = document.getElementById("emailInput");
+const salutationInput = document.getElementById("salutationInput");
 const resLabel = document.getElementById("resLabel");
 const randomizeBtn = document.getElementById("randomize");
 
@@ -920,20 +924,23 @@ if (submitTicketBtn) {
         name: nameInput.value.trim(),
         email: emailInput.value.trim(),
         organization: orgInput.value.trim(),
+        salutation: salutationInput ? salutationInput.value.trim() : '',
         patternBase64: patternBase64,
-        ticketBase64: ticketBase64
+        ticketBase64: ticketBase64,
+        ticketPageUrl: typeof hsbiTicket !== 'undefined' ? hsbiTicket.ticketPageUrl : window.location.href
       };
       
       console.log('Ticket data prepared:', {
         name: ticketData.name,
         email: ticketData.email,
         organization: ticketData.organization,
+        salutation: ticketData.salutation,
         patternBase64Length: ticketData.patternBase64.length,
         ticketBase64Length: ticketData.ticketBase64.length
       });
 
       // Send to backend
-      const response = await fetch('assets/library/ajax.php', {
+      const response = await fetch(typeof hsbiTicket !== 'undefined' ? hsbiTicket.ajaxUrl : 'views/assets/library/ajax.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1017,6 +1024,10 @@ async function finalizeTicket(testMode = false) {
     if (orgInput) {
       orgInput.addEventListener('input', saveFormData);
       orgInput.addEventListener('blur', saveFormData);
+    }
+    if (salutationInput) {
+      salutationInput.addEventListener('input', saveFormData);
+      salutationInput.addEventListener('blur', saveFormData);
     }
   }
 

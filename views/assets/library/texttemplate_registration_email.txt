@@ -1,0 +1,11 @@
+Hello {name},
+
+Thank you for confirming your registration!
+
+Your participation in the Postphotographic Images Conference at HSBI has been successfully confirmed.  
+Please find your personal conference ticket attached to this email.
+
+We look forward to seeing you at the conference!
+
+Best regards,
+Your HSBI Team
