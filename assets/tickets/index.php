@@ -21,6 +21,11 @@ $totalTickets = count($tickets);
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<style>
+.hsbi-italic {
+	font-style: italic;
+}
+</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticket Übersicht</title>
@@ -140,7 +145,7 @@ $totalTickets = count($tickets);
                                     <img src="<?php echo htmlspecialchars($ticket['ticket_file']); ?>" 
                                          alt="Ticket für <?php echo htmlspecialchars($ticket['name']); ?>">
                                 <?php else: ?>
-                                    <p class="muted" style="font-style: italic;">Bild nicht gefunden</p>
+                                    <p class="muted hsbi-italic">Bild nicht gefunden</p>
                                 <?php endif; ?>
                             </div>
                             
@@ -150,7 +155,7 @@ $totalTickets = count($tickets);
                                     <img src="<?php echo htmlspecialchars($ticket['pattern_file']); ?>" 
                                          alt="Canvas für <?php echo htmlspecialchars($ticket['name']); ?>">
                                 <?php else: ?>
-                                    <p class="muted" style="font-style: italic;">Bild nicht gefunden</p>
+                                    <p class="muted hsbi-italic">Bild nicht gefunden</p>
                                 <?php endif; ?>
                             </div>
                         </div>

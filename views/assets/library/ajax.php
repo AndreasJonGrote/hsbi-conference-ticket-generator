@@ -201,7 +201,7 @@
          // Ticket-Seiten-URL aus JavaScript-Parameter holen
          $ticket_page_url = isset($input['ticketPageUrl']) ? $input['ticketPageUrl'] : home_url();
          $optin_link = $ticket_page_url . '?uid=' . $uid;
-         $email_subject = 'Ihr HSBI Conference Ticket - Opt-in erforderlich';
+         $email_subject = 'Opt-in Required – HSBI – Postphotographic Images Conference';
          
          // E-Mail-Text aus Settings-Tabelle laden
          global $wpdb;

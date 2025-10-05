@@ -279,7 +279,7 @@ class HSBI_Conference_Ticket_Generator {
 	 * Admin-Seite rendern
 	 */
 	public function admin_page() {
-		include HSBI_TICKET_PLUGIN_PATH . 'views/assets/tickets/index.php';
+		include HSBI_TICKET_PLUGIN_PATH . 'views/assets/library/admin-overview.php';
 	}
 	
 	/**
@@ -870,11 +870,11 @@ You will receive your personal ticket and further information by email shortly.`
 			</div>
 			
 			<?php if (current_user_can('manage_options')): ?>
-			<div class="card" style="margin-bottom: 20px; padding: 15px; background: #f0f0f1; border-left: 4px solid #d63638;">
-				<h3 style="margin-top: 0; color: #d63638;">Admin-Funktionen</h3>
+			<div class="card hsbi-admin-card">
+				<h3 class="hsbi-admin-title">Admin-Funktionen</h3>
 				<p><strong>Vorsicht:</strong> Diese Aktionen können nicht rückgängig gemacht werden!</p>
-				<div style="margin-top: 10px;">
-					<button class="button button-secondary" onclick="deleteAllTickets()" style="margin-right: 10px;">
+				<div class="hsbi-admin-actions">
+					<button class="button button-secondary hsbi-button-spacing" onclick="deleteAllTickets()">
 						ALLE Tickets löschen
 					</button>
 					<button class="button button-secondary" onclick="deleteNonOptinTickets()">
@@ -887,11 +887,99 @@ You will receive your personal ticket and further information by email shortly.`
 		
 		<?php if (current_user_can('manage_options')): ?>
 		<script>
-		function deleteAllTickets() {
-			if (!confirm('WARNUNG: Möchten Sie ALLE Tickets wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!')) {
-				return;
-			}
+		// Modal-Funktionen (regelkonform)
+		function showConfirmModal(title, message, onConfirm) {
+			const modal = document.createElement('div');
+			modal.className = 'hsbi-modal-overlay';
+			modal.innerHTML = `
+				<div class="hsbi-modal-content">
+					<h3>${title}</h3>
+					<p>${message.replace(/\n/g, '<br>')}</p>
+					<div class="hsbi-modal-actions">
+						<button class="button button-secondary" onclick="closeModal(this)">Abbrechen</button>
+						<button class="button button-primary" onclick="confirmModal(this)">Bestätigen</button>
+					</div>
+				</div>
+			`;
 			
+			modal.onclick = function(e) {
+				if (e.target === modal) closeModal(modal);
+			};
+			
+			document.body.appendChild(modal);
+			
+			window.confirmModal = function(button) {
+				onConfirm();
+				closeModal(button.closest('.hsbi-modal-overlay'));
+			};
+		}
+		
+		function showSuccessModal(message) {
+			const modal = document.createElement('div');
+			modal.className = 'hsbi-modal-overlay';
+			modal.innerHTML = `
+				<div class="hsbi-modal-content hsbi-success">
+					<h3>Erfolg</h3>
+					<p>${message}</p>
+					<div class="hsbi-modal-actions">
+						<button class="button button-primary" onclick="closeModal(this)">OK</button>
+					</div>
+				</div>
+			`;
+			
+			modal.onclick = function(e) {
+				if (e.target === modal) closeModal(modal);
+			};
+			
+			document.body.appendChild(modal);
+		}
+		
+		function showErrorModal(message) {
+			const modal = document.createElement('div');
+			modal.className = 'hsbi-modal-overlay';
+			modal.innerHTML = `
+				<div class="hsbi-modal-content hsbi-error">
+					<h3>Fehler</h3>
+					<p>${message}</p>
+					<div class="hsbi-modal-actions">
+						<button class="button button-primary" onclick="closeModal(this)">OK</button>
+					</div>
+				</div>
+			`;
+			
+			modal.onclick = function(e) {
+				if (e.target === modal) closeModal(modal);
+			};
+			
+			document.body.appendChild(modal);
+		}
+		
+		function closeModal(button) {
+			const modal = button.closest('.hsbi-modal-overlay');
+			if (modal) {
+				modal.remove();
+			}
+		}
+		
+		// ESC-Taste für Modals
+		document.addEventListener('keydown', function(event) {
+			if (event.key === 'Escape') {
+				const modals = document.querySelectorAll('.hsbi-modal-overlay');
+				modals.forEach(modal => modal.remove());
+			}
+		});
+		
+		function deleteAllTickets() {
+			showConfirmModal(
+				'WARNUNG: Alle Tickets löschen',
+				'Möchten Sie ALLE Tickets wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!',
+				function() {
+					performDeleteAllTickets();
+				}
+			);
+		}
+		
+		function performDeleteAllTickets() {
 			// AJAX-Request für Massenlöschung
 			const formData = new FormData();
 			formData.append('action', 'delete_all_hsbi_tickets');
@@ -904,22 +992,28 @@ You will receive your personal ticket and further information by email shortly.`
 			.then(response => response.json())
 			.then(data => {
 				if (data.success) {
-					alert('Alle Tickets wurden erfolgreich gelöscht.');
-					location.reload();
+					showSuccessModal('Alle Tickets wurden erfolgreich gelöscht.');
+					setTimeout(() => location.reload(), 1500);
 				} else {
-					alert('Fehler beim Löschen: ' + data.data);
+					showErrorModal('Fehler beim Löschen: ' + data.data);
 				}
 			})
 			.catch(error => {
-				alert('Fehler beim Löschen: ' + error);
+				showErrorModal('Fehler beim Löschen: ' + error);
 			});
 		}
 
 		function deleteNonOptinTickets() {
-			if (!confirm('Möchten Sie alle Nicht-Opt-in-Tickets wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!')) {
-				return;
-			}
-			
+			showConfirmModal(
+				'Nicht-Opt-in-Tickets löschen',
+				'Möchten Sie alle Nicht-Opt-in-Tickets wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!',
+				function() {
+					performDeleteNonOptinTickets();
+				}
+			);
+		}
+		
+		function performDeleteNonOptinTickets() {
 			// AJAX-Request für Nicht-Opt-in-Löschung
 			const formData = new FormData();
 			formData.append('action', 'delete_non_optin_hsbi_tickets');
@@ -932,17 +1026,58 @@ You will receive your personal ticket and further information by email shortly.`
 			.then(response => response.json())
 			.then(data => {
 				if (data.success) {
-					alert('Alle Nicht-Opt-in-Tickets wurden erfolgreich gelöscht.');
-					location.reload();
+					showSuccessModal('Alle Nicht-Opt-in-Tickets wurden erfolgreich gelöscht.');
+					setTimeout(() => location.reload(), 1500);
 				} else {
-					alert('Fehler beim Löschen: ' + data.data);
+					showErrorModal('Fehler beim Löschen: ' + data.data);
 				}
 			})
 			.catch(error => {
-				alert('Fehler beim Löschen: ' + error);
+				showErrorModal('Fehler beim Löschen: ' + error);
 			});
 		}
 		</script>
+		
+		<style>
+		/* Modal Overlay für Bestätigungen */
+		.hsbi-modal-overlay {
+			position: fixed;
+			z-index: 2000;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0,0,0,0.5);
+		}
+		
+		.hsbi-modal-content {
+			background-color: #fefefe;
+			margin: 10% auto;
+			padding: 20px;
+			border: 1px solid #888;
+			width: 80%;
+			max-width: 500px;
+			border-radius: 8px;
+			position: relative;
+		}
+		
+		.hsbi-modal-actions {
+			margin-top: 20px;
+			text-align: right;
+		}
+		
+		.hsbi-modal-actions .button {
+			margin-left: 10px;
+		}
+		
+		.hsbi-success {
+			border-left: 4px solid #46b450;
+		}
+		
+		.hsbi-error {
+			border-left: 4px solid #dc3232;
+		}
+		</style>
 		<?php endif; ?>
 		<?php
 	}
@@ -959,11 +1094,11 @@ You will receive your personal ticket and further information by email shortly.`
 				<h2>Download-Optionen</h2>
 				<p>Wählen Sie aus, welche Daten Sie exportieren möchten:</p>
 				
-				<div style="margin: 20px 0;">
-					<button class="button button-primary" onclick="downloadCSV()" style="margin-right: 10px;">
+				<div class="hsbi-download-actions">
+					<button class="button button-primary hsbi-download-button" onclick="downloadCSV()">
 						Nur CSV-Datei
 					</button>
-					<button class="button button-primary" onclick="downloadImages()" style="margin-right: 10px;">
+					<button class="button button-primary hsbi-download-button" onclick="downloadImages()">
 						Nur Bilder (ZIP)
 					</button>
 					<button class="button button-primary" onclick="downloadAll()">
@@ -990,9 +1125,16 @@ You will receive your personal ticket and further information by email shortly.`
 		
 		<script>
 		function downloadCSV() {
-			if (!confirm('Möchten Sie nur die CSV-Datei herunterladen?')) {
-				return;
-			}
+			showConfirmModal(
+				'CSV-Download',
+				'Möchten Sie nur die CSV-Datei herunterladen?',
+				function() {
+					performDownloadCSV();
+				}
+			);
+		}
+		
+		function performDownloadCSV() {
 			
 			fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
 				method: 'POST',
@@ -1014,14 +1156,21 @@ You will receive your personal ticket and further information by email shortly.`
 			})
 			.catch(error => {
 				console.error('Error:', error);
-				alert('Fehler beim Download der CSV-Datei');
+				showErrorModal('Fehler beim Download der CSV-Datei');
 			});
 		}
 		
 		function downloadImages() {
-			if (!confirm('Möchten Sie nur die Bilder als ZIP herunterladen?')) {
-				return;
-			}
+			showConfirmModal(
+				'Bilder-Download',
+				'Möchten Sie nur die Bilder als ZIP herunterladen?',
+				function() {
+					performDownloadImages();
+				}
+			);
+		}
+		
+		function performDownloadImages() {
 			
 			fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
 				method: 'POST',
@@ -1043,14 +1192,21 @@ You will receive your personal ticket and further information by email shortly.`
 			})
 			.catch(error => {
 				console.error('Error:', error);
-				alert('Fehler beim Download der Bilder');
+				showErrorModal('Fehler beim Download der Bilder');
 			});
 		}
 		
 		function downloadAll() {
-			if (!confirm('Möchten Sie CSV + Bilder als ZIP herunterladen?')) {
-				return;
-			}
+			showConfirmModal(
+				'Vollständiger Download',
+				'Möchten Sie CSV + Bilder als ZIP herunterladen?',
+				function() {
+					performDownloadAll();
+				}
+			);
+		}
+		
+		function performDownloadAll() {
 			
 			fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
 				method: 'POST',
@@ -1072,10 +1228,253 @@ You will receive your personal ticket and further information by email shortly.`
 			})
 			.catch(error => {
 				console.error('Error:', error);
-				alert('Fehler beim Download');
+				showErrorModal('Fehler beim Download');
 			});
 		}
+		
+		// Modal-Funktionen (regelkonform)
+		function showConfirmModal(title, message, onConfirm) {
+			const modal = document.createElement('div');
+			modal.className = 'hsbi-modal-overlay';
+			modal.innerHTML = `
+				<div class="hsbi-modal-content">
+					<h3>${title}</h3>
+					<p>${message.replace(/\n/g, '<br>')}</p>
+					<div class="hsbi-modal-actions">
+						<button class="button button-secondary" onclick="closeModal(this)">Abbrechen</button>
+						<button class="button button-primary" onclick="confirmModal(this)">Bestätigen</button>
+					</div>
+				</div>
+			`;
+			
+			modal.onclick = function(e) {
+				if (e.target === modal) closeModal(modal);
+			};
+			
+			document.body.appendChild(modal);
+			
+			window.confirmModal = function(button) {
+				onConfirm();
+				closeModal(button.closest('.hsbi-modal-overlay'));
+			};
+		}
+		
+		function showSuccessModal(message) {
+			const modal = document.createElement('div');
+			modal.className = 'hsbi-modal-overlay';
+			modal.innerHTML = `
+				<div class="hsbi-modal-content hsbi-success">
+					<h3>Erfolg</h3>
+					<p>${message}</p>
+					<div class="hsbi-modal-actions">
+						<button class="button button-primary" onclick="closeModal(this)">OK</button>
+					</div>
+				</div>
+			`;
+			
+			modal.onclick = function(e) {
+				if (e.target === modal) closeModal(modal);
+			};
+			
+			document.body.appendChild(modal);
+		}
+		
+		function showErrorModal(message) {
+			const modal = document.createElement('div');
+			modal.className = 'hsbi-modal-overlay';
+			modal.innerHTML = `
+				<div class="hsbi-modal-content hsbi-error">
+					<h3>Fehler</h3>
+					<p>${message}</p>
+					<div class="hsbi-modal-actions">
+						<button class="button button-primary" onclick="closeModal(this)">OK</button>
+					</div>
+				</div>
+			`;
+			
+			modal.onclick = function(e) {
+				if (e.target === modal) closeModal(modal);
+			};
+			
+			document.body.appendChild(modal);
+		}
+		
+		function closeModal(button) {
+			const modal = button.closest('.hsbi-modal-overlay');
+			if (modal) {
+				modal.remove();
+			}
+		}
+		
+		// ESC-Taste für Modals
+		document.addEventListener('keydown', function(event) {
+			if (event.key === 'Escape') {
+				const modals = document.querySelectorAll('.hsbi-modal-overlay');
+				modals.forEach(modal => modal.remove());
+			}
+		});
 		</script>
+		
+		<style>
+		/* Modal Overlay für Bestätigungen */
+		.hsbi-modal-overlay {
+			position: fixed;
+			z-index: 2000;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0,0,0,0.5);
+		}
+		
+		.hsbi-modal-content {
+			background-color: #fefefe;
+			margin: 10% auto;
+			padding: 20px;
+			border: 1px solid #888;
+			width: 80%;
+			max-width: 500px;
+			border-radius: 8px;
+			position: relative;
+		}
+		
+		.hsbi-modal-actions {
+			margin-top: 20px;
+			text-align: right;
+		}
+		
+		.hsbi-modal-actions .button {
+			margin-left: 10px;
+		}
+		
+		.hsbi-success {
+			border-left: 4px solid #46b450;
+		}
+		
+		.hsbi-error {
+			border-left: 4px solid #dc3232;
+		}
+		
+		/* Admin-Card Styles */
+		.hsbi-admin-card {
+			margin-bottom: 20px;
+			padding: 15px;
+			background: #f0f0f1;
+			border-left: 4px solid #d63638;
+		}
+		
+		.hsbi-admin-title {
+			margin-top: 0;
+			color: #d63638;
+		}
+		
+		.hsbi-admin-actions {
+			margin-top: 10px;
+		}
+		
+		.hsbi-button-spacing {
+			margin-right: 10px;
+		}
+		
+		/* Download-Button Styles */
+		.hsbi-download-actions {
+			margin: 20px 0;
+		}
+		
+		.hsbi-download-button {
+			margin-right: 10px;
+		}
+		
+		/* Error/Success Message Styles */
+		.hsbi-error-message {
+			max-width: 600px;
+			margin: 20px auto;
+			padding: 20px;
+			background: #f8d7da;
+			border: 1px solid #f5c6cb;
+			border-radius: 8px;
+			text-align: center;
+		}
+		
+		.hsbi-error-title {
+			color: #721c24;
+			margin-bottom: 15px;
+		}
+		
+		.hsbi-error-text {
+			font-size: 16px;
+			line-height: 1.6;
+			color: #721c24;
+		}
+		
+		.hsbi-success-message {
+			max-width: 600px;
+			margin: 20px auto;
+			padding: 20px;
+			background: #d4edda;
+			border: 1px solid #c3e6cb;
+			border-radius: 8px;
+			text-align: center;
+		}
+		
+		.hsbi-success-title {
+			color: #155724;
+			margin-bottom: 15px;
+		}
+		
+		.hsbi-success-text {
+			font-size: 16px;
+			line-height: 1.6;
+			color: #155724;
+			margin-bottom: 20px;
+		}
+		
+		.hsbi-success-subtext {
+			font-size: 14px;
+			color: #6c757d;
+		}
+		
+		/* Error Container Styles */
+		.hsbi-error-container {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			min-height: 50vh;
+			padding: 20px;
+		}
+		
+		.hsbi-error-content {
+			text-align: center;
+			max-width: 500px;
+			padding: 40px;
+			background: #f8f9fa;
+			border: 1px solid #dee2e6;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+		}
+		
+		.hsbi-error-content h1 {
+			color: #dc3545;
+			margin-bottom: 20px;
+			font-size: 2rem;
+		}
+		
+		.hsbi-error-content p {
+			color: #6c757d;
+			margin-bottom: 15px;
+			line-height: 1.6;
+		}
+		
+		.hsbi-error-content a {
+			color: #007cba;
+			text-decoration: none;
+			font-weight: 500;
+		}
+		
+		.hsbi-error-content a:hover {
+			text-decoration: underline;
+		}
+		</style>
 		<?php
 	}
 	
@@ -1112,7 +1511,7 @@ You will receive your personal ticket and further information by email shortly.`
 				);
 				
 				// Bestätigungs-E-Mail mit Ticket-Anhang versenden
-				$confirmation_subject = 'HSBI Conference - Anmeldung bestätigt';
+				$confirmation_subject = 'Your Ticket – HSBI – Postphotographic Images Conference';
 				$confirmation_template = $this->get_setting('optin_confirmation_text', 
 					"Hello {name},\n\nThank you for your confirmation!\n\nYour registration for the Postphotographic Images Conference at HSBI has been successfully confirmed.\nYour personal conference ticket is attached to this email.\n\nBest regards,\nYour HSBI Team"
 				);
@@ -1166,10 +1565,18 @@ You will receive your personal ticket and further information by email shortly.`
 				// Nach der Danke-Anzeige beenden
 				return ob_get_clean();
 			} else {
-				echo '<div class="hsbi-error-message" style="max-width: 600px; margin: 20px auto; padding: 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; text-align: center;">';
-				echo '<h2 style="color: #721c24; margin-bottom: 15px;">Fehler</h2>';
-				echo '<p style="font-size: 16px; line-height: 1.6; color: #721c24;">Ticket nicht gefunden. Bitte kontaktieren Sie den Administrator.</p>';
-				echo '</div>';
+				// Ticket nicht gefunden - eigener View
+				ob_start();
+				?>
+				<div class="hsbi-error-container">
+					<div class="hsbi-error-content">
+						<h1>Error</h1>
+						<p>The link you were following is invalid or expired.</p>
+						<p><a href="<?php echo home_url(); ?>">Return to homepage</a></p>
+					</div>
+				</div>
+				<?php
+				return ob_get_clean();
 			}
 		}
 		
@@ -1180,14 +1587,14 @@ You will receive your personal ticket and further information by email shortly.`
 				'Thank you for registering for the Postphotographic Images Conference at HSBI!<br>You will receive your personal conference ticket and further information by email shortly.'
 			);
 			
-			echo '<div class="hsbi-success-message" style="max-width: 600px; margin: 20px auto; padding: 20px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; text-align: center;">';
-			echo '<h2 style="color: #155724; margin-bottom: 15px;">Vielen Dank' . ($name ? ', ' . esc_html($name) : '') . '!</h2>';
-			echo '<p style="font-size: 16px; line-height: 1.6; color: #155724; margin-bottom: 20px;">' . esc_html($thank_you_text) . '</p>';
-			echo '<p style="font-size: 14px; color: #6c757d;">Sie können diese Seite jetzt schließen oder ein weiteres Ticket erstellen.</p>';
+			echo '<div class="hsbi-success-message">';
+			echo '<h2 class="hsbi-success-title">Vielen Dank' . ($name ? ', ' . esc_html($name) : '') . '!</h2>';
+			echo '<p class="hsbi-success-text">' . esc_html($thank_you_text) . '</p>';
+			echo '<p class="hsbi-success-subtext">Sie können diese Seite jetzt schließen oder ein weiteres Ticket erstellen.</p>';
 			echo '</div>';
 		}
 		
-		include HSBI_TICKET_PLUGIN_PATH . 'views/index.php';
+		include HSBI_TICKET_PLUGIN_PATH . 'views/shortcode-template.php';
 		return ob_get_clean();
 	}
 }

@@ -1,4 +1,10 @@
 
+<style>
+.hsbi-hidden {
+	display: none;
+}
+</style>
+
 <div class="app">
 	<div class="panel">
 		<div class="header">
@@ -20,7 +26,7 @@
 					<span class="chip" id="step3">Step 3: Submit</span>
 					<span class="chip" id="step4">Step 4: Confirmation</span>
 				</div>
-				<strong id="resLabel" style="display:none" aria-hidden="true">8 × 8</strong>
+				<strong id="resLabel" class="hsbi-hidden" aria-hidden="true">8 × 8</strong>
 			</div>
 		</div>
 

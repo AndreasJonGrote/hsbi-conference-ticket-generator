@@ -75,7 +75,6 @@ async function loadFormData() {
       if (orgInput && result.data.organization) orgInput.value = result.data.organization;
       if (salutationInput && result.data.salutation) salutationInput.value = result.data.salutation;
       
-      console.log('Form data loaded from server session:', result.data);
     } else {
       // Fallback to local sessionStorage
       const savedData = sessionStorage.getItem('ticketFormData');
@@ -87,7 +86,6 @@ async function loadFormData() {
         if (orgInput && formData.organization) orgInput.value = formData.organization;
         if (salutationInput && formData.salutation) salutationInput.value = formData.salutation;
         
-        console.log('Form data loaded from local session:', formData);
       }
     }
   } catch (error) {
@@ -99,7 +97,6 @@ function clearFormData() {
   if (!AUTO_FILL_ENABLED) return;
   
   sessionStorage.removeItem('ticketFormData');
-  console.log('Form data cleared from session');
 }
 
 // ======= Validation using config =======
@@ -459,13 +456,6 @@ function loadImage(src, useCrossOrigin = false) {
     const img = new Image();
     if (useCrossOrigin) img.crossOrigin = "anonymous";
     img.onload = () => {
-      console.log(
-        "Image loaded successfully:",
-        src,
-        img.width,
-        "x",
-        img.height
-      );
       res(img);
     };
     img.onerror = (e) => {
@@ -478,23 +468,14 @@ function loadImage(src, useCrossOrigin = false) {
 
 async function tryLoadOverlay() {
   try {
-    console.log("Loading overlay from:", OVERLAY_LOCAL_FILENAME);
     const img = await loadImage(OVERLAY_LOCAL_FILENAME, false);
-    console.log("Overlay loaded successfully:", img.width, "x", img.height);
     return img;
   } catch (e) {
     console.error("Overlay local not found:", e);
-    console.log("Trying alternative path...");
     try {
       const altImg = await loadImage(
         "./images/Post-Photografc-Images_Overlay.png",
         false
-      );
-      console.log(
-        "Overlay loaded from alternative path:",
-        altImg.width,
-        "x",
-        altImg.height
       );
       return altImg;
     } catch (e2) {
@@ -909,15 +890,11 @@ if (submitTicketBtn) {
       const patternCanvas = buildPurePatternCanvas();
       const patternBase64 = patternCanvas.toDataURL('image/png');
       
-      console.log('Pattern canvas generated:', patternCanvas.width, 'x', patternCanvas.height);
-      console.log('Pattern base64 length:', patternBase64.length);
 
       // Generate full ticket canvas (with overlay)
       const ticketCanvas = await finalizeTicket(true);
       const ticketBase64 = ticketCanvas.toDataURL('image/png');
       
-      console.log('Ticket canvas generated:', ticketCanvas.width, 'x', ticketCanvas.height);
-      console.log('Ticket base64 length:', ticketBase64.length);
 
       // Prepare data for backend
       const ticketData = {
@@ -930,14 +907,6 @@ if (submitTicketBtn) {
         ticketPageUrl: typeof hsbiTicket !== 'undefined' ? hsbiTicket.ticketPageUrl : window.location.href
       };
       
-      console.log('Ticket data prepared:', {
-        name: ticketData.name,
-        email: ticketData.email,
-        organization: ticketData.organization,
-        salutation: ticketData.salutation,
-        patternBase64Length: ticketData.patternBase64.length,
-        ticketBase64Length: ticketData.ticketBase64.length
-      });
 
       // Send to backend
       const response = await fetch(typeof hsbiTicket !== 'undefined' ? hsbiTicket.ajaxUrl : 'views/assets/library/ajax.php', {
@@ -1032,8 +1001,7 @@ async function finalizeTicket(testMode = false) {
   }
 
   (function selfTests() {
-    const ok = (m) =>
-      console.log("%c✔ TEST OK", "color:#22c55e;font-weight:700", m);
+    const ok = (m) => console.log("%c✔ TEST OK", "color:#22c55e;font-weight:700", m);
     const fail = (m, e) => console.error("✖ TEST FAIL:", m, e || "");
     const prev = getState();
     try {

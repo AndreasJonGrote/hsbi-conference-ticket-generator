@@ -24,11 +24,11 @@ $table_name = $wpdb->prefix . 'hsbi_tickets';
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
 $optin_filter = "";
 if ($filter === 'optin') {
-    $optin_filter = "WHERE optin = 1";
+	$optin_filter = "WHERE optin = 1";
 } elseif ($filter === 'nooptin') {
-    $optin_filter = "WHERE optin = 0";
+	$optin_filter = "WHERE optin = 0";
 } elseif ($filter === 'invalid') {
-    $optin_filter = "WHERE optin = 0"; // Fehlerhafte Tickets werden separat geladen
+	$optin_filter = "WHERE optin = 0"; // Fehlerhafte Tickets werden separat geladen
 }
 
 // Tickets aus Datenbank laden
@@ -38,8 +38,8 @@ if ($filter === 'invalid') {
 	$invalid_tickets = array();
 	
 	foreach ($all_tickets as $ticket) {
-		$pattern_image_path = __DIR__ . '/' . $ticket['pattern_file'];
-		$ticket_image_path = __DIR__ . '/' . $ticket['ticket_file'];
+		$pattern_image_path = __DIR__ . '/../tickets/' . $ticket['pattern_file'];
+		$ticket_image_path = __DIR__ . '/../tickets/' . $ticket['ticket_file'];
 		
 		if (!file_exists($pattern_image_path) || !file_exists($ticket_image_path)) {
 			$invalid_tickets[] = $ticket;
@@ -55,8 +55,8 @@ if ($filter === 'invalid') {
 	// Nur Tickets mit gültigen Bildern anzeigen (außer bei fehlerhaften)
 	$validTickets = array();
 	foreach ($tickets as $ticket) {
-		$pattern_image_path = __DIR__ . '/' . $ticket['pattern_file'];
-		$ticket_image_path = __DIR__ . '/' . $ticket['ticket_file'];
+		$pattern_image_path = __DIR__ . '/../tickets/' . $ticket['pattern_file'];
+		$ticket_image_path = __DIR__ . '/../tickets/' . $ticket['ticket_file'];
 		
 		// Prüfen ob beide Bilder existieren
 		if (file_exists($pattern_image_path) && file_exists($ticket_image_path)) {
@@ -149,8 +149,8 @@ $optinTickets = 0;
 $noOptinTickets = 0;
 
 foreach ($all_tickets_from_db as $ticket) {
-	$pattern_image_path = __DIR__ . '/' . $ticket['pattern_file'];
-	$ticket_image_path = __DIR__ . '/' . $ticket['ticket_file'];
+	$pattern_image_path = __DIR__ . '/../tickets/' . $ticket['pattern_file'];
+	$ticket_image_path = __DIR__ . '/../tickets/' . $ticket['ticket_file'];
 	
 	if (file_exists($pattern_image_path) && file_exists($ticket_image_path)) {
 		// Gültiges Ticket
@@ -296,8 +296,8 @@ foreach ($all_tickets_from_db as $ticket) {
                         <td><?php echo date('d.m.Y H:i', strtotime($ticket['created_at'])); ?></td>
                         <td>
                             <?php 
-                                $pattern_image_path = __DIR__ . '/' . $ticket['pattern_file'];
-                                $pattern_image_url = plugin_dir_url(__FILE__) . $ticket['pattern_file'];
+                                $pattern_image_path = __DIR__ . '/../tickets/' . $ticket['pattern_file'];
+                                $pattern_image_url = plugin_dir_url(__FILE__) . '../tickets/' . $ticket['pattern_file'];
                                 if (file_exists($pattern_image_path)): ?>
                                     <img src="<?php echo esc_url($pattern_image_url); ?>" 
                                          alt="Pattern" class="ticket-image">
@@ -312,9 +312,9 @@ foreach ($all_tickets_from_db as $ticket) {
 </div>
 
 <!-- Ticket Modal -->
-<div id="ticketModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close" onclick="closeTicketModal()">&times;</span>
+<div id="ticketModal" class="hsbi-ticket-modal">
+    <div class="hsbi-modal-content">
+        <span class="hsbi-modal-close" onclick="closeTicketModal()">&times;</span>
         <h2>Ticket Details</h2>
         <div id="ticketModalContent">
             <!-- Inhalt wird dynamisch geladen -->
@@ -329,7 +329,7 @@ foreach ($all_tickets_from_db as $ticket) {
     }
     
     /* Modal Styles */
-    .modal {
+    .hsbi-ticket-modal {
         position: fixed;
         z-index: 1000;
         left: 0;
@@ -337,9 +337,14 @@ foreach ($all_tickets_from_db as $ticket) {
         width: 100%;
         height: 100%;
         background-color: rgba(0,0,0,0.5);
+        display: none;
     }
     
-    .modal-content {
+    .hsbi-ticket-modal.hsbi-modal-visible {
+        display: block;
+    }
+    
+    .hsbi-modal-content {
         background-color: #fefefe;
         margin: 5% auto;
         padding: 20px;
@@ -350,7 +355,7 @@ foreach ($all_tickets_from_db as $ticket) {
         position: relative;
     }
     
-    .close {
+    .hsbi-modal-close {
         color: #aaa;
         float: right;
         font-size: 28px;
@@ -361,8 +366,36 @@ foreach ($all_tickets_from_db as $ticket) {
         right: 15px;
     }
     
-    .close:hover {
+    .hsbi-modal-close:hover {
         color: #000;
+    }
+    
+    /* Modal Overlay für Bestätigungen */
+    .hsbi-modal-overlay {
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .hsbi-modal-actions {
+        margin-top: 20px;
+        text-align: right;
+    }
+    
+    .hsbi-modal-actions .button {
+        margin-left: 10px;
+    }
+    
+    .hsbi-success {
+        border-left: 4px solid #46b450;
+    }
+    
+    .hsbi-error {
+        border-left: 4px solid #dc3232;
     }
     
     .ticket-info-grid {
@@ -413,7 +446,7 @@ foreach ($all_tickets_from_db as $ticket) {
 <script>
 function viewTicket(ticketId) {
     // Modal öffnen
-    document.getElementById('ticketModal').style.display = 'block';
+    document.getElementById('ticketModal').classList.add('hsbi-modal-visible');
     
     // Ticket-Daten laden (vereinfacht - in echter Implementierung würde AJAX verwendet)
     const ticketData = getTicketData(ticketId);
@@ -441,14 +474,14 @@ function viewTicket(ticketId) {
 }
 
 function closeTicketModal() {
-    document.getElementById('ticketModal').style.display = 'none';
+    document.getElementById('ticketModal').classList.remove('hsbi-modal-visible');
 }
 
 // Modal schließen beim Klick außerhalb
 window.onclick = function(event) {
     const modal = document.getElementById('ticketModal');
     if (event.target == modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('hsbi-modal-visible');
     }
 }
 
@@ -474,8 +507,8 @@ function getTicketData(ticketId) {
     // Bild-URLs konstruieren - UID verwenden
     const baseUrl = '<?php echo plugin_dir_url(__FILE__); ?>';
     const ticketUid = row.getAttribute('data-ticket-uid');
-    const patternUrl = baseUrl + `${ticketUid}_pattern.png`;
-    const ticketUrl = baseUrl + `${ticketUid}_ticket.png`;
+    const patternUrl = baseUrl + `../tickets/${ticketUid}_pattern.png`;
+    const ticketUrl = baseUrl + `../tickets/${ticketUid}_ticket.png`;
     
     return {
         name: name,
@@ -490,10 +523,16 @@ function getTicketData(ticketId) {
 
 
 function deleteTicket(ticketId, ticketName) {
-    if (!confirm('Möchten Sie das Ticket von "' + ticketName + '" wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.')) {
-        return;
-    }
-    
+    showConfirmModal(
+        'Ticket löschen',
+        'Möchten Sie das Ticket von "' + ticketName + '" wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.',
+        function() {
+            performDeleteTicket(ticketId);
+        }
+    );
+}
+
+function performDeleteTicket(ticketId) {
     // AJAX-Request zum Löschen
     fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
         method: 'POST',
@@ -505,23 +544,29 @@ function deleteTicket(ticketId, ticketName) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Ticket erfolgreich gelöscht!');
-            location.reload();
+            showSuccessModal('Ticket erfolgreich gelöscht!');
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('Fehler beim Löschen: ' + (data.data || 'Unbekannter Fehler'));
+            showErrorModal('Fehler beim Löschen: ' + (data.data || 'Unbekannter Fehler'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Fehler beim Löschen des Tickets');
+        showErrorModal('Fehler beim Löschen des Tickets');
     });
 }
 
 function exportTickets() {
-    if (!confirm('Möchten Sie alle Tickets als CSV + Bilder als ZIP exportieren?\n\nDies kann bei vielen Tickets etwas dauern.')) {
-        return;
-    }
-    
+    showConfirmModal(
+        'Tickets exportieren',
+        'Möchten Sie alle Tickets als CSV + Bilder als ZIP exportieren?\n\nDies kann bei vielen Tickets etwas dauern.',
+        function() {
+            performExportTickets();
+        }
+    );
+}
+
+function performExportTickets() {
     // AJAX-Request zum Export
     fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
         method: 'POST',
@@ -543,7 +588,89 @@ function exportTickets() {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Fehler beim Export der Tickets');
+        showErrorModal('Fehler beim Export der Tickets');
     });
 }
+
+// Modal-Funktionen (regelkonform)
+function showConfirmModal(title, message, onConfirm) {
+    const modal = document.createElement('div');
+    modal.className = 'hsbi-modal-overlay';
+    modal.innerHTML = `
+        <div class="hsbi-modal-content">
+            <h3>${title}</h3>
+            <p>${message.replace(/\n/g, '<br>')}</p>
+            <div class="hsbi-modal-actions">
+                <button class="button button-secondary" onclick="closeModal(this)">Abbrechen</button>
+                <button class="button button-primary" onclick="confirmModal(this)">Bestätigen</button>
+            </div>
+        </div>
+    `;
+    
+    modal.onclick = function(e) {
+        if (e.target === modal) closeModal(modal);
+    };
+    
+    document.body.appendChild(modal);
+    
+    window.confirmModal = function(button) {
+        onConfirm();
+        closeModal(button.closest('.hsbi-modal-overlay'));
+    };
+}
+
+function showSuccessModal(message) {
+    const modal = document.createElement('div');
+    modal.className = 'hsbi-modal-overlay';
+    modal.innerHTML = `
+        <div class="hsbi-modal-content hsbi-success">
+            <h3>Erfolg</h3>
+            <p>${message}</p>
+            <div class="hsbi-modal-actions">
+                <button class="button button-primary" onclick="closeModal(this)">OK</button>
+            </div>
+        </div>
+    `;
+    
+    modal.onclick = function(e) {
+        if (e.target === modal) closeModal(modal);
+    };
+    
+    document.body.appendChild(modal);
+}
+
+function showErrorModal(message) {
+    const modal = document.createElement('div');
+    modal.className = 'hsbi-modal-overlay';
+    modal.innerHTML = `
+        <div class="hsbi-modal-content hsbi-error">
+            <h3>Fehler</h3>
+            <p>${message}</p>
+            <div class="hsbi-modal-actions">
+                <button class="button button-primary" onclick="closeModal(this)">OK</button>
+            </div>
+        </div>
+    `;
+    
+    modal.onclick = function(e) {
+        if (e.target === modal) closeModal(modal);
+    };
+    
+    document.body.appendChild(modal);
+}
+
+function closeModal(button) {
+    const modal = button.closest('.hsbi-modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// ESC-Taste für Modals
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modals = document.querySelectorAll('.hsbi-modal-overlay');
+        modals.forEach(modal => modal.remove());
+    }
+});
 </script>
