@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 // Plugin-Konstanten
 define('HSBI_TICKET_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('HSBI_TICKET_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('HSBI_TICKET_VERSION', '1.0.0');
+define('HSBI_TICKET_VERSION', '1.0.1');
 
 /**
  * Haupt-Plugin-Klasse
@@ -235,8 +235,8 @@ class HSBI_Conference_Ticket_Generator {
 	 */
 	public function add_admin_menu() {
 		add_menu_page(
-			'HSBI Tickets',
-			'HSBI Tickets',
+			'Conference Tickets',
+			'Tickets',
 			'edit_posts', // Editor und höher
 			'hsbi-tickets',
 			array($this, 'admin_page'),
@@ -1500,7 +1500,16 @@ You will receive your personal ticket and further information by email shortly.`
 				$uid
 			), ARRAY_A);
 			
-			if ($ticket) {
+		if ($ticket) {
+			// Prüfen ob bereits Opt-in erfolgt ist
+			if ($ticket['optin'] == 1) {
+				// Bereits bestätigt - nur Danke-Seite anzeigen
+				$thank_you_text = $this->get_setting('thank_you_text', 
+					'Thank you for registering for the Postphotographic Images Conference at HSBI!<br>You will receive your personal conference ticket and further information by email shortly.'
+				);
+				
+				echo '<div id="hsbi-ticket-generator"><div class="subtitle">' . wp_kses_post($thank_you_text) . '</div></div>';
+			} else {
 				// Opt-in Status auf 1 setzen
 				$wpdb->update(
 					$table_name,
@@ -1560,7 +1569,8 @@ You will receive your personal ticket and further information by email shortly.`
 				);
 				
 				// WordPress-Content verarbeiten (unterstützt HTML)
-				echo wp_kses_post($thank_you_text);
+				echo '<div id="hsbi-ticket-generator"><div class="subtitle">' . wp_kses_post($thank_you_text) . '</div></div>';
+			}
 				
 				// Nach der Danke-Anzeige beenden
 				return ob_get_clean();
@@ -1580,19 +1590,6 @@ You will receive your personal ticket and further information by email shortly.`
 			}
 		}
 		
-		// Erfolgs-Anzeige prüfen (für andere Erfolgs-Szenarien)
-		if (isset($_GET['hsbi_ticket_success']) && $_GET['hsbi_ticket_success'] == '1') {
-			$name = isset($_GET['name']) ? sanitize_text_field($_GET['name']) : '';
-			$thank_you_text = $this->get_setting('thank_you_text', 
-				'Thank you for registering for the Postphotographic Images Conference at HSBI!<br>You will receive your personal conference ticket and further information by email shortly.'
-			);
-			
-			echo '<div class="hsbi-success-message">';
-			echo '<h2 class="hsbi-success-title">Vielen Dank' . ($name ? ', ' . esc_html($name) : '') . '!</h2>';
-			echo '<p class="hsbi-success-text">' . esc_html($thank_you_text) . '</p>';
-			echo '<p class="hsbi-success-subtext">Sie können diese Seite jetzt schließen oder ein weiteres Ticket erstellen.</p>';
-			echo '</div>';
-		}
 		
 		include HSBI_TICKET_PLUGIN_PATH . 'views/shortcode-template.php';
 		return ob_get_clean();

@@ -701,6 +701,7 @@ function randomizeDesign() {
 // ======= Events =======
 board.addEventListener("mousedown", (e) => {
   if (e.button !== 0) return;
+  e.stopPropagation();
   pushUndo();
   drawing = true;
   paintCell(e.target);
@@ -708,6 +709,7 @@ board.addEventListener("mousedown", (e) => {
 });
 board.addEventListener("mousemove", (e) => {
   if (!drawing) return;
+  e.stopPropagation();
   paintCell(e.target);
 });
 window.addEventListener("mouseup", () => {
@@ -740,16 +742,22 @@ window.addEventListener("touchend", () => {
   drawing = false;
 });
 
-res.addEventListener("input", () => {
+res.addEventListener("input", (e) => {
+  e.stopPropagation();
+  e.preventDefault();
   const snap = snapshotImageData();
   pushUndo();
   const newN = parseInt(res.value, 10);
   rebuildFromSnapshot(newN, snap);
 });
-bg.addEventListener("input", () => {
+bg.addEventListener("input", (e) => {
+  e.stopPropagation();
+  e.preventDefault();
   board.style.backgroundColor = bg.value;
 });
-clearBtn.addEventListener("click", () => {
+clearBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  e.preventDefault();
   pushUndo();
   board.querySelectorAll(".cell").forEach((c) => {
     c.style.backgroundColor = "transparent";
@@ -757,11 +765,17 @@ clearBtn.addEventListener("click", () => {
   });
 });
 
-randomizeBtn.addEventListener("click", randomizeDesign);
+randomizeBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  randomizeDesign();
+});
 
 // Undo/Redo buttons
 if (undoBtn) {
-  undoBtn.addEventListener("click", () => {
+  undoBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
     if (undoStack.length > 1) {
       redoStack.push(undoStack.pop());
       setState(undoStack[undoStack.length - 1]);
@@ -770,7 +784,9 @@ if (undoBtn) {
 }
 
 if (redoBtn) {
-  redoBtn.addEventListener("click", () => {
+  redoBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
     if (redoStack.length > 0) {
       undoStack.push(redoStack.pop());
       setState(undoStack[undoStack.length - 1]);
@@ -983,25 +999,49 @@ async function finalizeTicket(testMode = false) {
   // Add auto-save event listeners
   if (AUTO_FILL_ENABLED) {
     if (nameInput) {
-      nameInput.addEventListener('input', saveFormData);
-      nameInput.addEventListener('blur', saveFormData);
+      nameInput.addEventListener('input', (e) => {
+        e.stopPropagation();
+        saveFormData();
+      });
+      nameInput.addEventListener('blur', (e) => {
+        e.stopPropagation();
+        saveFormData();
+      });
     }
     if (emailInput) {
-      emailInput.addEventListener('input', saveFormData);
-      emailInput.addEventListener('blur', saveFormData);
+      emailInput.addEventListener('input', (e) => {
+        e.stopPropagation();
+        saveFormData();
+      });
+      emailInput.addEventListener('blur', (e) => {
+        e.stopPropagation();
+        saveFormData();
+      });
     }
     if (orgInput) {
-      orgInput.addEventListener('input', saveFormData);
-      orgInput.addEventListener('blur', saveFormData);
+      orgInput.addEventListener('input', (e) => {
+        e.stopPropagation();
+        saveFormData();
+      });
+      orgInput.addEventListener('blur', (e) => {
+        e.stopPropagation();
+        saveFormData();
+      });
     }
     if (salutationInput) {
-      salutationInput.addEventListener('input', saveFormData);
-      salutationInput.addEventListener('blur', saveFormData);
+      salutationInput.addEventListener('input', (e) => {
+        e.stopPropagation();
+        saveFormData();
+      });
+      salutationInput.addEventListener('blur', (e) => {
+        e.stopPropagation();
+        saveFormData();
+      });
     }
   }
 
   (function selfTests() {
-    const ok = (m) => console.log("%c✔ TEST OK", "color:#22c55e;font-weight:700", m);
+    const ok = (m) => {};
     const fail = (m, e) => console.error("✖ TEST FAIL:", m, e || "");
     const prev = getState();
     try {
